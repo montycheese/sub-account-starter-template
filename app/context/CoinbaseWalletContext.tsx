@@ -1,6 +1,6 @@
 'use client';
 
-import { createCoinbaseWalletSDK, ProviderInterface } from '@coinbase/wallet-sdk';
+import { createCoinbaseWalletSDK, getCryptoKeyAccount, ProviderInterface } from '@coinbase/wallet-sdk';
 import { createContext, useContext, useEffect, useState, ReactNode, useMemo, useCallback } from 'react';
 import { Address, createWalletClient, custom } from 'viem';
 import { baseSepolia } from 'viem/chains';
@@ -10,6 +10,8 @@ interface CoinbaseWalletContextType {
   disconnect: () => void;
   isConnected: boolean;
   address: Address | null;
+  subAccount: Address | null;
+  createSubAccount: () => Promise<Address | null>;
 }
 
 const CoinbaseWalletContext = createContext<CoinbaseWalletContextType>({
@@ -18,12 +20,15 @@ const CoinbaseWalletContext = createContext<CoinbaseWalletContextType>({
   disconnect: () => {},
   isConnected: false,
   address: null,
+  subAccount: null,
+  createSubAccount: async () => null,
 });
 
 export function CoinbaseWalletProvider({ children }: { children: ReactNode }) {
   const [provider, setProvider] = useState<ProviderInterface | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const [address, setAddress] = useState<Address | null>(null);
+  const [subAccount, setSubAccount] = useState<Address | null>(null);
 
   useEffect(() => {
     // Initialize Coinbase Wallet SDK
@@ -34,6 +39,9 @@ export function CoinbaseWalletProvider({ children }: { children: ReactNode }) {
           options: "smartWalletOnly",
           keysUrl: 'https://keys-dev.coinbase.com/connect',
         },
+        subaccount: {
+            getSigner: getCryptoKeyAccount,
+        }
     });
 
     setProvider(coinbaseWalletSDK.getProvider());
@@ -75,7 +83,33 @@ export function CoinbaseWalletProvider({ children }: { children: ReactNode }) {
       console.error('Failed to disconnect from Coinbase Wallet:', error);
     }
   };
+  
+  const createSubAccount = useCallback(async () => {
+    if (!provider || !address) {
+        throw new Error('Address or provider not found');
+    };
+    const signer = await getCryptoKeyAccount();
 
+    const walletConnectResponse = await provider.request({
+        method: 'wallet_connect',
+        params: [{
+          version: '1',
+          capabilities: {
+            addAddress: {
+              chainId: baseSepolia.id,
+              createAccount: {
+                signer: signer.account?.publicKey,
+              },
+              address
+            },
+          },
+        }],
+    });
+
+    const subAccount = walletConnectResponse?.accounts[0].capabilities?.addAddress?.address;
+    setSubAccount(subAccount);
+    return subAccount;
+  }, [provider, address]);
   return (
     <CoinbaseWalletContext.Provider
       value={{
@@ -84,6 +118,8 @@ export function CoinbaseWalletProvider({ children }: { children: ReactNode }) {
         disconnect,
         isConnected,
         address,
+        subAccount,
+        createSubAccount,
       }}
     >
       {children}
