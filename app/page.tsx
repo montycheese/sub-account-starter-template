@@ -71,7 +71,18 @@ export default function Home() {
           </div>
           <div style={{ display: 'flex', gap: '1rem' }}>
             <button onClick={sendTransaction}>Send Transaction</button>
-            {txHash && <div style={{ overflowWrap: 'break-word' }}>Transaction Hash: {txHash}</div>}
+            {txHash && (
+              <div style={{ overflowWrap: 'break-word' }}>
+                Transaction Hash:{' '}
+                <a 
+                  href={`https://sepolia.basescan.org/tx/${txHash}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  {`https://sepolia.basescan.org/tx/${txHash}`}
+                </a>
+              </div>
+            )}
           </div>
         </div>
       )}
