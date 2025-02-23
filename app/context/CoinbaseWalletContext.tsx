@@ -89,7 +89,6 @@ export function CoinbaseWalletProvider({ children }: { children: ReactNode }) {
         throw new Error('Address or provider not found');
     };
     const signer = await getCryptoKeyAccount();
-
     const walletConnectResponse = await provider.request({
         method: 'wallet_connect',
         params: [{
