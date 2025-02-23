@@ -2,7 +2,8 @@
 
 import { createCoinbaseWalletSDK, getCryptoKeyAccount, ProviderInterface } from '@coinbase/wallet-sdk';
 import { createContext, useContext, useEffect, useState, ReactNode, useMemo, useCallback } from 'react';
-import { Address, createWalletClient, custom } from 'viem';
+import { Address, createPublicClient, createWalletClient, custom, http, WalletClient } from 'viem';
+import { toCoinbaseSmartAccount, WebAuthnAccount } from 'viem/account-abstraction';
 import { baseSepolia } from 'viem/chains';
 interface CoinbaseWalletContextType {
   provider: ProviderInterface | null;
@@ -12,6 +13,7 @@ interface CoinbaseWalletContextType {
   address: Address | null;
   subAccount: Address | null;
   createSubAccount: () => Promise<Address | null>;
+  subAccountWalletClient: WalletClient | null;
 }
 
 const CoinbaseWalletContext = createContext<CoinbaseWalletContextType>({
@@ -22,6 +24,7 @@ const CoinbaseWalletContext = createContext<CoinbaseWalletContextType>({
   address: null,
   subAccount: null,
   createSubAccount: async () => null,
+  subAccountWalletClient: null,
 });
 
 export function CoinbaseWalletProvider({ children }: { children: ReactNode }) {
@@ -29,6 +32,7 @@ export function CoinbaseWalletProvider({ children }: { children: ReactNode }) {
   const [isConnected, setIsConnected] = useState(false);
   const [address, setAddress] = useState<Address | null>(null);
   const [subAccount, setSubAccount] = useState<Address | null>(null);
+  const [subAccountWalletClient, setSubAccountWalletClient] = useState<WalletClient | null>(null);
 
   useEffect(() => {
     // Initialize Coinbase Wallet SDK
@@ -109,6 +113,56 @@ export function CoinbaseWalletProvider({ children }: { children: ReactNode }) {
     setSubAccount(subAccount);
     return subAccount;
   }, [provider, address]);
+
+  const publicClient = useMemo(() => {
+    if (!provider) return null;
+    return createPublicClient({
+      chain: baseSepolia,
+      transport: http(),
+    });
+  }, [provider]);
+
+
+  useEffect(() => {
+    async function initializeSubAccountClient() {
+      if (!subAccount || !provider || !publicClient) {
+        setSubAccountWalletClient(null);
+        return;
+      }
+
+      try {
+        const signer = await getCryptoKeyAccount();
+        if (!signer) {
+          throw new Error('Signer not found');
+        }
+        const account = await toCoinbaseSmartAccount({
+          client: publicClient,
+          owners: [signer.account as WebAuthnAccount],
+          address: subAccount,
+        });
+
+        const client = createWalletClient({
+          account,
+          chain: baseSepolia,
+          transport: custom({
+            async request({ method, params }) {
+              const response = await provider.request({ method, params });
+              return response;
+            }
+          }),
+        });
+
+        setSubAccountWalletClient(client);
+      } catch (error) {
+        console.error('Failed to initialize subAccount wallet client:', error);
+        setSubAccountWalletClient(null);
+      }
+    }
+
+    initializeSubAccountClient();
+  }, [subAccount, provider, publicClient]);
+  
+
   return (
     <CoinbaseWalletContext.Provider
       value={{
@@ -119,6 +173,7 @@ export function CoinbaseWalletProvider({ children }: { children: ReactNode }) {
         address,
         subAccount,
         createSubAccount,
+        subAccountWalletClient
       }}
     >
       {children}
