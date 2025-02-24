@@ -2,9 +2,13 @@
 import { useCallback, useState } from 'react';
 import { useCoinbaseWallet } from './context/CoinbaseWalletContext';
 import { baseSepolia } from 'viem/chains';
+import { spendPermissionManagerAbi } from './abi';
+import { parseEther } from 'viem';
 
 export default function Home() {
-  const { isConnected, connect, disconnect, address, subAccount, createSubAccount, subAccountWalletClient, provider } = useCoinbaseWallet();
+  const { isConnected, connect, disconnect, address, subAccount, 
+    spendPermission, spendPermissionSignature,
+    createSubAccount, subAccountWalletClient, provider } = useCoinbaseWallet();
 
   const [signature, setSignature] = useState<string | null>(null);
   const [txHash, setTxHash] = useState<string | null>(null);
@@ -24,22 +28,40 @@ export default function Home() {
     if (!provider) {
         throw new Error('Provider not found');
     }
+    if (!spendPermission || !spendPermissionSignature) {
+      throw new Error('Spend permission data not found');
+    }
 
     const txHash = await provider.request({
       method: 'wallet_sendCalls',
       params: [
         {
           chainId: baseSepolia.id,
-          calls: [{
-            to: subAccount,
+          calls: [
+            {
+              to: '0xf85210B21cC50302F477BA56686d2019dC9b67Ad',
+              abi: spendPermissionManagerAbi,
+              functionName: 'approveWithSignature',
+              args: [spendPermission, spendPermissionSignature],
+              data: '0x',
+          },
+          {
+              to: '0xf85210B21cC50302F477BA56686d2019dC9b67Ad',
+              abi: spendPermissionManagerAbi,
+              functionName: 'spend',
+              args: [spendPermission, parseEther('0.0001').toString()],
+              data: '0x',
+          },
+          {
+            to: '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045',
             data: '0x',
-            value: 0,
+            value: parseEther('0.0001').toString(),
           }],
           from: subAccount,
           version: '1',
           capabilities: {
             paymasterService: {
-              url: 'YOUR_PAYMASTER_URL'
+              url: 'https://api.developer.coinbase.com/rpc/v1/base-sepolia/S-fOd2n2Oi4fl4e1Crm83XeDXZ7tkg8O'
             }
           }
 
@@ -48,7 +70,7 @@ export default function Home() {
     });
     setTxHash(txHash as string);
     return txHash;
-  }, [provider, subAccount]);
+  }, [provider, subAccount, spendPermission, spendPermissionSignature]);
 
   if (!isConnected) {
     return (
