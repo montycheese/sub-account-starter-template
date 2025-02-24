@@ -3,7 +3,7 @@
 import { createCoinbaseWalletSDK, getCryptoKeyAccount, ProviderInterface } from '@coinbase/wallet-sdk';
 import { createContext, useContext, useEffect, useState, ReactNode, useMemo, useCallback } from 'react';
 import { Address, createPublicClient, createWalletClient, custom, http, parseEther, toHex, WalletClient } from 'viem';
-import { toCoinbaseSmartAccount, WebAuthnAccount } from 'viem/account-abstraction';
+import { eip5792Actions } from 'viem/experimental';
 import { baseSepolia } from 'viem/chains';
 interface CoinbaseWalletContextType {
   provider: ProviderInterface | null;
@@ -73,12 +73,7 @@ export function CoinbaseWalletProvider({ children }: { children: ReactNode }) {
     if (!provider) return null;
     return createWalletClient({
       chain: baseSepolia,
-      transport: custom({
-        async request({ method, params }) {
-          const response = await provider.request({ method, params });
-          return response;
-        }
-      }),
+      transport: custom(provider),
     });
   }, [provider]);
 
@@ -163,22 +158,14 @@ export function CoinbaseWalletProvider({ children }: { children: ReactNode }) {
         if (!signer) {
           throw new Error('Signer not found');
         }
-        const account = await toCoinbaseSmartAccount({
-          client: publicClient,
-          owners: [signer.account as WebAuthnAccount],
-          address: subAccount,
-        });
 
         const client = createWalletClient({
-          account,
+          account: {
+            address: subAccount,
+          },
           chain: baseSepolia,
-          transport: custom({
-            async request({ method, params }) {
-              const response = await provider.request({ method, params });
-              return response;
-            }
-          }),
-        });
+          transport: custom(provider),
+        }).extend(eip5792Actions());
 
         setSubAccountWalletClient(client);
       } catch (error) {
