@@ -111,12 +111,16 @@ export function CoinbaseWalletProvider({ children }: { children: ReactNode }) {
         params: [{
           version: '1',
           capabilities: {
-            addAddress: {
-              chainId: baseSepolia.id,
-              createAccount: {
-                signer: signer.account?.publicKey,
+            addSubAccount: {
+              account: {
+                type: 'create',
+                keys: [
+                  {
+                    type: 'webauthn-p256',
+                    signer: signer.account?.publicKey,
+                  },
+                ],
               },
-              address
             },
             spendPermissions: {
                 token: '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE',
@@ -127,13 +131,32 @@ export function CoinbaseWalletProvider({ children }: { children: ReactNode }) {
             }
           },
         }],
-    });
-
-    const subAccount = walletConnectResponse?.accounts[0].capabilities?.addAddress?.address;
-    const spendPermissionData = walletConnectResponse?.accounts[0].capabilities?.spendPermissions;
-    setSpendPermission(spendPermissionData.permission);
-    setSpendPermissionSignature(spendPermissionData.signature);
+    })as {
+      accounts: {
+        address: Address;
+        capabilities: {
+          addSubAccount: {
+            address: Address;
+          };
+          spendPermissions: {
+            permission: SpendPermission;
+            signature: `0x${string}`;
+          };
+        };
+      }[];
+    };
+  
+    const { addSubAccount, spendPermissions } = walletConnectResponse.accounts[0].capabilities;
+  
+    const subAccount = addSubAccount.address;
+    const { permission, signature } = spendPermissions;
+    console.log('subAccount', subAccount);
+    console.log('permission', permission);
+    console.log('signature', signature);
+    setSpendPermission(permission);
+    setSpendPermissionSignature(signature);
     setSubAccount(subAccount);
+
     return subAccount;
   }, [provider, address, setSpendPermission, setSpendPermissionSignature]);
 
