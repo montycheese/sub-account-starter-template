@@ -31,37 +31,6 @@ export default function Home() {
     if (!spendPermission || !spendPermissionSignature) {
       throw new Error('Spend permission data not found');
     }
-
-    /* This currently does't work because of a keys issue pending fix
-    const txHash = await subAccountWalletClient?.sendCalls({
-      chain: baseSepolia,
-      capabilities: {
-        paymasterService: {
-          url: 'https://api.developer.coinbase.com/rpc/v1/base-sepolia/S-fOd2n2Oi4fl4e1Crm83XeDXZ7tkg8O'
-        }
-      },
-      calls: [
-        {
-          to: '0xf85210B21cC50302F477BA56686d2019dC9b67Ad',
-          abi: spendPermissionManagerAbi,
-          functionName: 'approveWithSignature',
-          args: [spendPermission, spendPermissionSignature],
-          data: '0x',
-      },
-      {
-          to: '0xf85210B21cC50302F477BA56686d2019dC9b67Ad',
-          abi: spendPermissionManagerAbi,
-          functionName: 'spend',
-          args: [spendPermission, parseEther('0.0001')],
-          data: '0x',
-      },
-      {
-        to: '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045',
-        data: '0x',
-        value: parseEther('0.0001'),
-      }],
-    });*/
-
     
     const txHash = await provider.request({
       method: 'wallet_sendCalls',
@@ -101,7 +70,7 @@ export default function Home() {
     });
     setTxHash(txHash as string);
     return txHash;
-  }, [provider, subAccount, spendPermission, spendPermissionSignature, subAccountWalletClient]);
+  }, [provider, subAccount, spendPermission, spendPermissionSignature]);
 
   if (!isConnected) {
     return (

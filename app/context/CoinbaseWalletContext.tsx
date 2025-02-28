@@ -168,7 +168,6 @@ export function CoinbaseWalletProvider({ children }: { children: ReactNode }) {
     });
   }, [provider]);
 
-
   useEffect(() => {
     async function initializeSubAccountClient() {
       if (!subAccount || !provider || !publicClient) {
