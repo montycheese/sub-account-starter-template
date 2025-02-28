@@ -9,10 +9,11 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@coinbase/wallet-sdk": "file:./coinbase-wallet-sdk-4.4.0-alpha.2025-02-21.tgz",
+    "@coinbase/wallet-sdk": "4.4.0-canary.1",
     "next": "15.1.7",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react-dom": "^19.0.0",
+    "viem": "^2.23.5"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",

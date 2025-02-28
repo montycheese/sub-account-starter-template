@@ -32,8 +32,8 @@ export default function Home() {
       throw new Error('Spend permission data not found');
     }
 
-    // This currently does't work because of a keys issue pending fix
-    /*const txHash = await subAccountWalletClient?.sendCalls({
+    /* This currently does't work because of a keys issue pending fix
+    const txHash = await subAccountWalletClient?.sendCalls({
       chain: baseSepolia,
       capabilities: {
         paymasterService: {
