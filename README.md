@@ -1,8 +1,26 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Coinbase Wallet SDK Sub Account Example
+
+This is a simple example of how to use the Coinbase Wallet SDK and Coinbase Smart Wallet to create a Sub Account and use it to send a transaction. A more detailed guide of this code can be found in the Coinbase Smart Wallet documentation on Sub Accounts [here](https://docs.base.org/identity/smart-wallet/guides/sub-accounts/overview).
 
 ## Getting Started
 
-First, run the development server:
+First, create a `.env` file at the project root and set the `NEXT_PUBLIC_PAYMASTER_URL` environment variable. Follow the instructions [here](https://docs.cdp.coinbase.com/paymaster/docs/paymaster-bundler-qs-ui) to create a paymaster and get the URL. Look at the .env.template file for the format.
+
+```bash
+NEXT_PUBLIC_PAYMASTER_URL=
+```
+
+Then, install the dependencies:
+
+```bash
+npm install
+```
+
+
+This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+
+
+To run the development server:
 
 ```bash
 npm run dev
@@ -17,8 +35,6 @@ bun dev
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
 ## Learn More
 

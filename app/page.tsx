@@ -3,7 +3,12 @@ import { useCallback, useState } from 'react';
 import { useCoinbaseWallet } from './context/CoinbaseWalletContext';
 import { baseSepolia } from 'viem/chains';
 import { spendPermissionManagerAbi } from './abi';
-import { parseEther } from 'viem';
+import { fromHex, parseEther } from 'viem';
+
+const paymasterUrl = process.env.NEXT_PUBLIC_PAYMASTER_URL;
+if (!paymasterUrl) {
+  throw new Error('NEXT_PUBLIC_PAYMASTER_URL is not set in .env. Follow the instructions in the README to set it up.');
+}
 
 export default function Home() {
   const { isConnected, connect, disconnect, address, subAccount, 
@@ -30,6 +35,17 @@ export default function Home() {
     }
     if (!spendPermission || !spendPermissionSignature) {
       throw new Error('Spend permission data not found');
+    }
+
+    const ethToSendInWei: bigint = parseEther('0.0001');
+
+    const currentBalance = await provider.request({
+      method: 'eth_getBalance',
+      params: [address, 'latest'],
+    });
+
+    if (fromHex(currentBalance as `0x${string}`, 'bigint') < ethToSendInWei) {
+      throw new Error(`Unable to send transaction due to insufficient balance in main account ${address}. Please fund it with at least 0.0001 ETH.`);
     }
     
     const txHash = await provider.request({
@@ -70,7 +86,7 @@ export default function Home() {
     });
     setTxHash(txHash as string);
     return txHash;
-  }, [provider, subAccount, spendPermission, spendPermissionSignature]);
+  }, [provider, subAccount, spendPermission, spendPermissionSignature, address]);
 
   if (!isConnected) {
     return (
