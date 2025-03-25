@@ -4,7 +4,7 @@ This is a simple example of how to use the Coinbase Wallet SDK and Coinbase Smar
 
 ## Getting Started
 
-First, create a `.env` file at the project root and set the `NEXT_PUBLIC_PAYMASTER_URL` environment variable. Follow the instructions [here](https://docs.cdp.coinbase.com/paymaster/docs/paymaster-bundler-qs-ui) to create a paymaster and get the URL. Look at the .env.template file for the format.
+First, create a `.env` file at the project root and set the `NEXT_PUBLIC_PAYMASTER_URL` environment variable. Sign up or log into Coinbase Developer Platform [here](https://www.coinbase.com/developer-platform/products/paymaster) to create a paymaster and get the URL. Look at the .env.template file for the format.
 
 ```bash
 NEXT_PUBLIC_PAYMASTER_URL=
